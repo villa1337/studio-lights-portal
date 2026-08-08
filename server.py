@@ -133,28 +133,33 @@ def set_nanoleaf():
 
     ok, out, err = run_cmd(cmd)
 
-    # Set brightness via Nanoleaf state API (animData ignores global brightness,
-    # but the state API still dims the physical LED output)
+    # Set brightness via Nanoleaf state API
+    # Must come AFTER nanoleaf-set (which resets brightness when writing effects)
+    # Runs in background thread with delay so the effect write fully settles first
     brightness = data.get("brightness")
-    if brightness is not None:
-        try:
-            config = {}
-            with open(NANOLEAF_CONFIG, "r") as f:
-                for line in f:
-                    if "=" in line:
-                        k, v = line.strip().split("=", 1)
-                        config[k.strip()] = v.strip()
-            ip = config.get("NANOLEAF_IP", "192.168.0.198")
-            port = config.get("NANOLEAF_PORT", "16021")
-            token = config.get("NANOLEAF_TOKEN", "")
-            payload = json.dumps({"brightness": {"value": int(brightness)}})
-            bri_cmd = (
-                f'curl -s -X PUT "http://{ip}:{port}/api/v1/{token}/state" '
-                f"-d '{payload}'"
-            )
-            run_cmd(bri_cmd)
-        except Exception:
-            pass
+    if brightness is not None and int(brightness) < 100:
+        import threading
+        def set_nanoleaf_brightness(bri):
+            import time, urllib.request
+            time.sleep(1.5)
+            try:
+                config = {}
+                with open(NANOLEAF_CONFIG, "r") as f:
+                    for line in f:
+                        if "=" in line:
+                            k, v = line.strip().split("=", 1)
+                            config[k.strip()] = v.strip()
+                ip = config.get("NANOLEAF_IP", "192.168.0.198")
+                port = config.get("NANOLEAF_PORT", "16021")
+                token = config.get("NANOLEAF_TOKEN", "")
+                url = f"http://{ip}:{port}/api/v1/{token}/state"
+                payload = json.dumps({"brightness": {"value": int(bri)}}).encode()
+                req = urllib.request.Request(url, data=payload, method="PUT")
+                req.add_header("Content-Type", "application/json")
+                urllib.request.urlopen(req, timeout=5)
+            except Exception:
+                pass
+        threading.Thread(target=set_nanoleaf_brightness, args=(brightness,), daemon=True).start()
 
     return jsonify({"success": ok, "output": out, "error": err})
 
