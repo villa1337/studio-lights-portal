@@ -126,36 +126,22 @@ def set_nanoleaf():
     if not colors:
         return jsonify({"error": "No colors provided"}), 400
 
-    # Clean hex values
-    clean_colors = [c.lstrip("#") for c in colors[:5]]
+    # Clean hex values and apply brightness by scaling RGB
+    brightness = data.get("brightness", 100)
+    scale = max(0, min(int(brightness), 100)) / 100.0
+
+    clean_colors = []
+    for c in colors[:5]:
+        h = c.lstrip("#")
+        r = int(int(h[0:2], 16) * scale)
+        g = int(int(h[2:4], 16) * scale)
+        b = int(int(h[4:6], 16) * scale)
+        clean_colors.append(f"{r:02x}{g:02x}{b:02x}")
+
     color_args = " ".join(clean_colors)
     cmd = f"nanoleaf-set {color_args}"
 
     ok, out, err = run_cmd(cmd)
-
-    # Set brightness if specified
-    brightness = data.get("brightness")
-    if brightness is not None:
-        # Read nanoleaf config for IP/token
-        try:
-            config = {}
-            with open(NANOLEAF_CONFIG, "r") as f:
-                for line in f:
-                    if "=" in line:
-                        k, v = line.strip().split("=", 1)
-                        config[k.strip()] = v.strip()
-            ip = config.get("NANOLEAF_IP", "192.168.0.198")
-            port = config.get("NANOLEAF_PORT", "16021")
-            token = config.get("NANOLEAF_TOKEN", "")
-            payload = json.dumps({"brightness": {"value": int(brightness)}})
-            bri_cmd = (
-                f'curl -s -X PUT "http://{ip}:{port}/api/v1/{token}/state" '
-                f"-d '{payload}'"
-            )
-            run_cmd(bri_cmd)
-        except Exception:
-            pass
-
     return jsonify({"success": ok, "output": out, "error": err})
 
 
