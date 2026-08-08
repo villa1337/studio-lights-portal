@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio Lights</title>
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --border: #0f3460;
+    --text: #e0e0e0;
+    --accent: #e94560;
+    --dim: #888;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .room-container {
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 4/3;
+    position: relative;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .room-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* SVG light zones */
+  .light-zone {
+    cursor: pointer;
+    transition: opacity 0.2s, filter 0.2s;
+  }
+  .light-zone:hover {
+    opacity: 0.85;
+    filter: brightness(1.2);
+  }
+  .light-zone rect, .light-zone circle, .light-zone polygon, .light-zone path {
+    stroke: rgba(255,255,255,0.3);
+    stroke-width: 1.5;
+  }
+  .light-label {
+    fill: var(--text);
+    font-size: 11px;
+    font-family: -apple-system, sans-serif;
+    text-anchor: middle;
+    pointer-events: none;
+    font-weight: 500;
+  }
+
+  /* Controls panel */
+  .controls {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .ctrl-btn {
+    padding: 10px 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .ctrl-btn:hover { border-color: var(--accent); background: #1e2a4a; }
+  .ctrl-btn.danger { border-color: #c0392b; }
+  .ctrl-btn.danger:hover { background: #2c1215; }
+  .ctrl-btn.mood { border-color: #8e44ad; }
+  .ctrl-btn.mood:hover { background: #1a1230; }
+
+  /* Color picker popup */
+  .picker-popup {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    z-index: 1000;
+    min-width: 300px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  }
+  .picker-popup.active { display: block; }
+  .picker-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+  }
+  .picker-overlay.active { display: block; }
+  .picker-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .picker-color-input {
+    width: 100%;
+    height: 50px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+  .picker-hex {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: monospace;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+  }
+  .picker-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .picker-actions button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  .btn-apply { background: var(--accent); color: white; }
+  .btn-off { background: #2c3e50; color: #e0e0e0; }
+  .btn-cancel { background: var(--bg); color: var(--dim); border: 1px solid var(--border) !important; }
+
+  /* Toast notification */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 2000;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  .toast.success { border-color: #27ae60; }
+  .toast.error { border-color: #c0392b; }
+
+  /* Status indicator */
+  .status-bar {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--dim);
+  }
+  .color-swatch {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    display: inline-block;
+  }
+</style>
+</head>
+<body>
+
+<h1>🎨 Studio Lights</h1>
+
+<div class="room-container">
+  <svg class="room-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+    <!-- Room outline -->
+    <rect x="20" y="20" width="760" height="560" fill="none" stroke="#0f3460" stroke-width="2" rx="8"/>
+
+    <!-- Desk (center-bottom area) -->
+    <rect x="250" y="380" width="300" height="120" fill="#0d1b30" stroke="#1a3a5c" stroke-width="1" rx="4"/>
+    <text x="400" y="445" class="light-label" font-size="10" fill="#555">DESK</text>
+
+    <!-- Back wall label -->
+    <text x="400" y="50" class="light-label" font-size="9" fill="#444">— BACK WALL —</text>
+
+    <!-- === LIGHT ZONES === -->
+
+    <!-- Nanoleaf (back wall, left-center) -->
+    <g class="light-zone" data-light="nanoleaf" data-name="Nanoleaf">
+      <polygon points="120,80 200,65 240,100 220,150 160,160 100,130" fill="#2d1f5e" opacity="0.8"/>
+      <polygon points="240,100 300,85 310,130 260,155 220,150" fill="#2d1f5e" opacity="0.7"/>
+      <text x="200" y="125" class="light-label">Nanoleaf</text>
+    </g>
+
+    <!-- Iris (back wall, right) -->
+    <g class="light-zone" data-light="iris" data-name="Iris">
+      <circle cx="620" cy="120" r="45" fill="#1a2a5e" opacity="0.8"/>
+      <circle cx="620" cy="120" r="30" fill="#2a3a7e" opacity="0.6"/>
+      <text x="620" y="125" class="light-label">Iris</text>
+    </g>
+
+    <!-- TechoOficina (ceiling, center-right) -->
+    <g class="light-zone" data-light="techoficina" data-name="TechoOficina">
+      <circle cx="580" cy="300" r="40" fill="#3d2b1a" opacity="0.7"/>
+      <circle cx="580" cy="300" r="25" fill="#5e3d1a" opacity="0.5"/>
+      <text x="580" y="305" class="light-label">Techo</text>
+    </g>
+
+    <!-- Ofilamp (left side, standing lamp) -->
+    <g class="light-zone" data-light="ofilamp" data-name="Ofilamp">
+      <rect x="60" y="330" width="50" height="100" fill="#3d2b1a" opacity="0.7" rx="8"/>
+      <circle cx="85" cy="320" r="25" fill="#5e3d1a" opacity="0.6"/>
+      <text x="85" y="385" class="light-label">Ofilamp</text>
+    </g>
+
+    <!-- PC Case (center, above desk) -->
+    <rect x="320" y="220" width="160" height="140" fill="#0a1520" stroke="#1a3a5c" stroke-width="1.5" rx="6"/>
+    <text x="400" y="245" class="light-label" font-size="9" fill="#555">PC</text>
+
+    <!-- RAM (inside PC, top) -->
+    <g class="light-zone" data-light="ram" data-name="RAM (2x DDR5)">
+      <rect x="335" y="255" width="55" height="25" fill="#1a3050" opacity="0.8" rx="3"/>
+      <rect x="335" y="285" width="55" height="25" fill="#1a3050" opacity="0.8" rx="3"/>
+      <text x="362" y="280" class="light-label" font-size="9">RAM</text>
+    </g>
+
+    <!-- GPU (inside PC, center) -->
+    <g class="light-zone" data-light="gpu" data-name="GPU (RTX 5070)">
+      <rect x="400" y="265" width="65" height="35" fill="#1a3050" opacity="0.8" rx="3"/>
+      <text x="432" y="287" class="light-label" font-size="9">GPU</text>
+    </g>
+
+    <!-- Mobo + Cooler (inside PC, bottom) -->
+    <g class="light-zone" data-light="mobo" data-name="Mobo + Cooler">
+      <rect x="335" y="315" width="130" height="30" fill="#1a2040" opacity="0.8" rx="3"/>
+      <text x="400" y="334" class="light-label" font-size="9">Mobo + Cooler</text>
+    </g>
+
+    <!-- Room labels -->
+    <text x="400" y="580" class="light-label" font-size="9" fill="#444">— FRONT (YOU) —</text>
+  </svg>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="ctrl-btn" onclick="openAllPicker()">🎨 Set All</button>
+  <button class="ctrl-btn danger" onclick="allOff()">⬛ All Off</button>
+  <button class="ctrl-btn mood" onclick="moodSync()">🔄 Mood Sync</button>
+  <button class="ctrl-btn mood" onclick="moodNew()">🖼️ New Wallpaper</button>
+  <button class="ctrl-btn" onclick="loadStatus()">📊 Refresh Status</button>
+</div>
+
+<div class="status-bar">
+  <span>Primary:</span> <span class="color-swatch" id="swatch-primary"></span> <code id="hex-primary">—</code>
+  <span style="margin-left:12px">Secondary:</span> <span class="color-swatch" id="swatch-secondary"></span> <code id="hex-secondary">—</code>
+</div>
+
+<!-- Color Picker Popup -->
+<div class="picker-overlay" id="pickerOverlay" onclick="closePicker()"></div>
+<div class="picker-popup" id="pickerPopup">
+  <div class="picker-title" id="pickerTitle">Set Color</div>
+  <input type="color" class="picker-color-input" id="pickerColor" value="#e94560" oninput="syncHex()">
+  <input type="text" class="picker-hex" id="pickerHex" placeholder="#RRGGBB" oninput="syncColor()">
+  <div class="picker-actions">
+    <button class="btn-apply" onclick="applyColor()">Apply</button>
+    <button class="btn-off" onclick="turnOff()">Off</button>
+    <button class="btn-cancel" onclick="closePicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+let currentTarget = null; // which light zone is being edited
+
+// --- Light zone click handlers ---
+document.querySelectorAll('.light-zone').forEach(zone => {
+  zone.addEventListener('click', () => {
+    const light = zone.dataset.light;
+    const name = zone.dataset.name;
+    openPicker(light, name);
+  });
+});
+
+function openPicker(light, name) {
+  currentTarget = light;
+  document.getElementById('pickerTitle').textContent = name;
+  document.getElementById('pickerPopup').classList.add('active');
+  document.getElementById('pickerOverlay').classList.add('active');
+}
+
+function openAllPicker() {
+  currentTarget = 'all';
+  document.getElementById('pickerTitle').textContent = 'Set All Lights';
+  document.getElementById('pickerPopup').classList.add('active');
+  document.getElementById('pickerOverlay').classList.add('active');
+}
+
+function closePicker() {
+  document.getElementById('pickerPopup').classList.remove('active');
+  document.getElementById('pickerOverlay').classList.remove('active');
+  currentTarget = null;
+}
+
+function syncHex() {
+  document.getElementById('pickerHex').value = document.getElementById('pickerColor').value;
+}
+
+function syncColor() {
+  const hex = document.getElementById('pickerHex').value;
+  if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+    document.getElementById('pickerColor').value = hex;
+  }
+}
+
+// --- API calls ---
+async function api(endpoint, body = {}) {
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success || data.success === undefined) {
+      toast('✓ Done', 'success');
+    } else {
+      toast('✗ ' + (data.error || 'Failed'), 'error');
+    }
+    updateZoneColor(currentTarget, body.color || body.colors?.[0] || null);
+    return data;
+  } catch (e) {
+    toast('✗ Connection error', 'error');
+    return { success: false };
+  }
+}
+
+function applyColor() {
+  const color = document.getElementById('pickerColor').value.replace('#', '');
+  if (!currentTarget) return;
+
+  switch (currentTarget) {
+    case 'all':
+      api('/api/all', { color });
+      break;
+    case 'techoficina':
+    case 'ofilamp':
+    case 'iris':
+      api(`/api/hue/${currentTarget}`, { color, action: 'on' });
+      break;
+    case 'nanoleaf':
+      api('/api/nanoleaf', { colors: [color], action: 'on' });
+      break;
+    case 'ram':
+      api('/api/rgb/ram', { color, action: 'on' });
+      break;
+    case 'gpu':
+      api('/api/rgb/gpu', { color, action: 'on' });
+      break;
+    case 'mobo':
+      api('/api/rgb/mobo', { color, action: 'on' });
+      break;
+  }
+  closePicker();
+}
+
+function turnOff() {
+  if (!currentTarget) return;
+
+  switch (currentTarget) {
+    case 'all':
+      allOff();
+      break;
+    case 'techoficina':
+    case 'ofilamp':
+    case 'iris':
+      api(`/api/hue/${currentTarget}`, { action: 'off' });
+      break;
+    case 'nanoleaf':
+      api('/api/nanoleaf', { action: 'off' });
+      break;
+    case 'ram':
+      api('/api/rgb/ram', { action: 'off' });
+      break;
+    case 'gpu':
+      api('/api/rgb/gpu', { action: 'off' });
+      break;
+    case 'mobo':
+      api('/api/rgb/mobo', { action: 'off' });
+      break;
+  }
+  updateZoneColor(currentTarget, '000000');
+  closePicker();
+}
+
+async function allOff() {
+  toast('⏳ Turning off...', 'success');
+  await fetch('/api/all/off', { method: 'POST' });
+  toast('✓ All lights off', 'success');
+  // Dim all zones
+  document.querySelectorAll('.light-zone rect, .light-zone circle, .light-zone polygon').forEach(el => {
+    el.style.fill = '#111';
+  });
+}
+
+async function moodSync() {
+  toast('⏳ Syncing to wallpaper...', 'success');
+  const res = await fetch('/api/mood/sync', { method: 'POST' });
+  const data = await res.json();
+  if (data.success) {
+    toast('✓ Mood synced', 'success');
+    loadStatus();
+  } else {
+    toast('✗ Sync failed', 'error');
+  }
+}
+
+async function moodNew() {
+  toast('⏳ Fetching new wallpaper...', 'success');
+  const res = await fetch('/api/mood/new', { method: 'POST' });
+  const data = await res.json();
+  if (data.success) {
+    toast('✓ New wallpaper + lights synced', 'success');
+    loadStatus();
+  } else {
+    toast('✗ Failed', 'error');
+  }
+}
+
+// --- Visual feedback ---
+function updateZoneColor(target, hex) {
+  if (!target || !hex || target === 'all') return;
+  const zone = document.querySelector(`[data-light="${target}"]`);
+  if (!zone) return;
+  const fills = zone.querySelectorAll('rect, circle, polygon');
+  fills.forEach(el => {
+    el.style.fill = '#' + hex;
+    el.style.opacity = '0.8';
+  });
+}
+
+async function loadStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    document.getElementById('swatch-primary').style.background = '#' + data.primary;
+    document.getElementById('hex-primary').textContent = '#' + data.primary;
+    document.getElementById('swatch-secondary').style.background = '#' + data.secondary;
+    document.getElementById('hex-secondary').textContent = '#' + data.secondary;
+  } catch (e) {
+    // silent
+  }
+}
+
+// --- Toast notifications ---
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => { el.className = 'toast'; }, 2500);
+}
+
+// Load status on page load
+loadStatus();
+</script>
+</body>
+</html>
