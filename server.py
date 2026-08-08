@@ -147,9 +147,10 @@ def set_nanoleaf():
             ip = config.get("NANOLEAF_IP", "192.168.0.198")
             port = config.get("NANOLEAF_PORT", "16021")
             token = config.get("NANOLEAF_TOKEN", "")
+            payload = json.dumps({"brightness": {"value": int(brightness)}})
             bri_cmd = (
                 f'curl -s -X PUT "http://{ip}:{port}/api/v1/{token}/state" '
-                f'-d \'{{"brightness":{{"value":{brightness}}}}}\''
+                f"-d '{payload}'"
             )
             run_cmd(bri_cmd)
         except Exception:
