@@ -157,6 +157,36 @@
   .btn-off { background: #2c3e50; color: #e0e0e0; }
   .btn-cancel { background: var(--bg); color: var(--dim); border: 1px solid var(--border) !important; }
 
+  /* Brightness slider */
+  .picker-brightness {
+    display: none;
+    margin-bottom: 14px;
+  }
+  .picker-brightness.visible { display: block; }
+  .picker-brightness label {
+    font-size: 0.8rem;
+    color: var(--dim);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .picker-brightness input[type="range"] {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--bg);
+    border-radius: 3px;
+    outline: none;
+  }
+  .picker-brightness input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+
   /* Toast notification */
   .toast {
     position: fixed;
@@ -207,68 +237,68 @@
     <!-- Room outline -->
     <rect x="20" y="20" width="760" height="560" fill="none" stroke="#0f3460" stroke-width="2" rx="8"/>
 
-    <!-- Desk (center-bottom area) -->
-    <rect x="250" y="380" width="300" height="120" fill="#0d1b30" stroke="#1a3a5c" stroke-width="1" rx="4"/>
-    <text x="400" y="445" class="light-label" font-size="10" fill="#555">DESK</text>
+    <!-- Front label (top = you) -->
+    <text x="400" y="50" class="light-label" font-size="9" fill="#444">— FRONT (YOU) —</text>
 
-    <!-- Back wall label -->
-    <text x="400" y="50" class="light-label" font-size="9" fill="#444">— BACK WALL —</text>
+    <!-- Desk (top-center area) -->
+    <rect x="200" y="80" width="400" height="120" fill="#0d1b30" stroke="#1a3a5c" stroke-width="1" rx="4"/>
+    <text x="400" y="105" class="light-label" font-size="10" fill="#555">DESK</text>
 
     <!-- === LIGHT ZONES === -->
 
-    <!-- Nanoleaf (back wall, left-center) -->
-    <g class="light-zone" data-light="nanoleaf" data-name="Nanoleaf">
-      <polygon points="120,80 200,65 240,100 220,150 160,160 100,130" fill="#2d1f5e" opacity="0.8"/>
-      <polygon points="240,100 300,85 310,130 260,155 220,150" fill="#2d1f5e" opacity="0.7"/>
-      <text x="200" y="125" class="light-label">Nanoleaf</text>
-    </g>
-
-    <!-- Iris (back wall, right) -->
-    <g class="light-zone" data-light="iris" data-name="Iris">
-      <circle cx="620" cy="120" r="45" fill="#1a2a5e" opacity="0.8"/>
-      <circle cx="620" cy="120" r="30" fill="#2a3a7e" opacity="0.6"/>
-      <text x="620" y="125" class="light-label">Iris</text>
-    </g>
-
-    <!-- TechoOficina (ceiling, center-right) -->
-    <g class="light-zone" data-light="techoficina" data-name="TechoOficina">
-      <circle cx="580" cy="300" r="40" fill="#3d2b1a" opacity="0.7"/>
-      <circle cx="580" cy="300" r="25" fill="#5e3d1a" opacity="0.5"/>
-      <text x="580" y="305" class="light-label">Techo</text>
-    </g>
-
-    <!-- Ofilamp (left side, standing lamp) -->
+    <!-- Ofilamp (left of desk) -->
     <g class="light-zone" data-light="ofilamp" data-name="Ofilamp">
-      <rect x="60" y="330" width="50" height="100" fill="#3d2b1a" opacity="0.7" rx="8"/>
-      <circle cx="85" cy="320" r="25" fill="#5e3d1a" opacity="0.6"/>
-      <text x="85" y="385" class="light-label">Ofilamp</text>
+      <rect x="80" y="90" width="50" height="100" fill="#3d2b1a" opacity="0.7" rx="8"/>
+      <circle cx="105" cy="80" r="25" fill="#5e3d1a" opacity="0.6"/>
+      <text x="105" y="145" class="light-label">Ofilamp</text>
     </g>
 
-    <!-- PC Case (center, above desk) -->
-    <rect x="320" y="220" width="160" height="140" fill="#0a1520" stroke="#1a3a5c" stroke-width="1.5" rx="6"/>
-    <text x="400" y="245" class="light-label" font-size="9" fill="#555">PC</text>
+    <!-- PC Case (right of desk) -->
+    <rect x="520" y="90" width="140" height="100" fill="#0a1520" stroke="#1a3a5c" stroke-width="1.5" rx="6"/>
+    <text x="590" y="108" class="light-label" font-size="9" fill="#555">PC</text>
 
-    <!-- RAM (inside PC, top) -->
+    <!-- RAM (inside PC) -->
     <g class="light-zone" data-light="ram" data-name="RAM (2x DDR5)">
-      <rect x="335" y="255" width="55" height="25" fill="#1a3050" opacity="0.8" rx="3"/>
-      <rect x="335" y="285" width="55" height="25" fill="#1a3050" opacity="0.8" rx="3"/>
-      <text x="362" y="280" class="light-label" font-size="9">RAM</text>
+      <rect x="530" y="115" width="45" height="20" fill="#1a3050" opacity="0.8" rx="3"/>
+      <rect x="530" y="140" width="45" height="20" fill="#1a3050" opacity="0.8" rx="3"/>
+      <text x="552" y="135" class="light-label" font-size="9">RAM</text>
     </g>
 
-    <!-- GPU (inside PC, center) -->
+    <!-- GPU (inside PC) -->
     <g class="light-zone" data-light="gpu" data-name="GPU (RTX 5070)">
-      <rect x="400" y="265" width="65" height="35" fill="#1a3050" opacity="0.8" rx="3"/>
-      <text x="432" y="287" class="light-label" font-size="9">GPU</text>
+      <rect x="585" y="120" width="60" height="30" fill="#1a3050" opacity="0.8" rx="3"/>
+      <text x="615" y="140" class="light-label" font-size="9">GPU</text>
     </g>
 
     <!-- Mobo + Cooler (inside PC, bottom) -->
     <g class="light-zone" data-light="mobo" data-name="Mobo + Cooler">
-      <rect x="335" y="315" width="130" height="30" fill="#1a2040" opacity="0.8" rx="3"/>
-      <text x="400" y="334" class="light-label" font-size="9">Mobo + Cooler</text>
+      <rect x="530" y="165" width="115" height="20" fill="#1a2040" opacity="0.8" rx="3"/>
+      <text x="587" y="179" class="light-label" font-size="9">Mobo+Cooler</text>
     </g>
 
-    <!-- Room labels -->
-    <text x="400" y="580" class="light-label" font-size="9" fill="#444">— FRONT (YOU) —</text>
+    <!-- TechoOficina (ceiling, center of room) -->
+    <g class="light-zone" data-light="techoficina" data-name="TechoOficina">
+      <circle cx="400" cy="320" r="45" fill="#3d2b1a" opacity="0.7"/>
+      <circle cx="400" cy="320" r="28" fill="#5e3d1a" opacity="0.5"/>
+      <text x="400" y="325" class="light-label">TechoOficina</text>
+    </g>
+
+    <!-- Nanoleaf (middle back wall) -->
+    <g class="light-zone" data-light="nanoleaf" data-name="Nanoleaf">
+      <polygon points="320,470 380,455 420,475 410,520 360,530 310,510" fill="#2d1f5e" opacity="0.8"/>
+      <polygon points="420,475 480,460 490,500 450,525 410,520" fill="#2d1f5e" opacity="0.7"/>
+      <text x="400" y="500" class="light-label">Nanoleaf</text>
+    </g>
+
+    <!-- Iris (back right) -->
+    <g class="light-zone" data-light="iris" data-name="Iris">
+      <circle cx="650" cy="490" r="45" fill="#1a2a5e" opacity="0.8"/>
+      <circle cx="650" cy="490" r="30" fill="#2a3a7e" opacity="0.6"/>
+      <text x="650" y="495" class="light-label">Iris</text>
+    </g>
+
+    <!-- Back wall label (bottom) -->
+    <text x="400" y="575" class="light-label" font-size="9" fill="#444">— BACK WALL —</text>
   </svg>
 </div>
 
@@ -292,6 +322,10 @@
   <div class="picker-title" id="pickerTitle">Set Color</div>
   <input type="color" class="picker-color-input" id="pickerColor" value="#e94560" oninput="syncHex()">
   <input type="text" class="picker-hex" id="pickerHex" placeholder="#RRGGBB" oninput="syncColor()">
+  <div class="picker-brightness" id="pickerBrightness">
+    <label>Brightness <span id="brightnessValue">100%</span></label>
+    <input type="range" min="0" max="100" value="100" id="brightnessSlider" oninput="updateBrightnessLabel()">
+  </div>
   <div class="picker-actions">
     <button class="btn-apply" onclick="applyColor()">Apply</button>
     <button class="btn-off" onclick="turnOff()">Off</button>
@@ -314,9 +348,17 @@ document.querySelectorAll('.light-zone').forEach(zone => {
   });
 });
 
+const DIMMABLE = ['techoficina', 'ofilamp', 'iris', 'nanoleaf'];
+
 function openPicker(light, name) {
   currentTarget = light;
   document.getElementById('pickerTitle').textContent = name;
+  const bri = document.getElementById('pickerBrightness');
+  if (DIMMABLE.includes(light)) {
+    bri.classList.add('visible');
+  } else {
+    bri.classList.remove('visible');
+  }
   document.getElementById('pickerPopup').classList.add('active');
   document.getElementById('pickerOverlay').classList.add('active');
 }
@@ -324,8 +366,13 @@ function openPicker(light, name) {
 function openAllPicker() {
   currentTarget = 'all';
   document.getElementById('pickerTitle').textContent = 'Set All Lights';
+  document.getElementById('pickerBrightness').classList.remove('visible');
   document.getElementById('pickerPopup').classList.add('active');
   document.getElementById('pickerOverlay').classList.add('active');
+}
+
+function updateBrightnessLabel() {
+  document.getElementById('brightnessValue').textContent = document.getElementById('brightnessSlider').value + '%';
 }
 
 function closePicker() {
@@ -369,6 +416,7 @@ async function api(endpoint, body = {}) {
 
 function applyColor() {
   const color = document.getElementById('pickerColor').value.replace('#', '');
+  const brightness = parseInt(document.getElementById('brightnessSlider').value);
   if (!currentTarget) return;
 
   switch (currentTarget) {
@@ -378,10 +426,10 @@ function applyColor() {
     case 'techoficina':
     case 'ofilamp':
     case 'iris':
-      api(`/api/hue/${currentTarget}`, { color, action: 'on' });
+      api(`/api/hue/${currentTarget}`, { color, action: 'on', brightness });
       break;
     case 'nanoleaf':
-      api('/api/nanoleaf', { colors: [color], action: 'on' });
+      api('/api/nanoleaf', { colors: [color], action: 'on', brightness });
       break;
     case 'ram':
       api('/api/rgb/ram', { color, action: 'on' });
